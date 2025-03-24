@@ -3,9 +3,9 @@ function bpi_render_admin_page() {
     if (!bpi_user_can_install()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'bulk-plugin-installer'));
     }
-    
-    wp_enqueue_style('bpi-admin-style', BPI_URL . 'css/admin.css', [], BPI_VERSION);
-    wp_enqueue_script('bpi-admin', BPI_URL . 'js/admin.js', ['jquery'], BPI_VERSION, true);
+
+    wp_enqueue_style('bpi-admin-style', BPI_URL . 'assets/css/admin.css', [], BPI_VERSION);
+    wp_enqueue_script('bpi-admin', BPI_URL . 'assets/js/admin.js', ['jquery'], BPI_VERSION, true);
     wp_localize_script('bpi-admin', 'bpiAjax', [
         'nonce' => wp_create_nonce('bpi_installer'),
         'ajaxurl' => admin_url('admin-ajax.php')
@@ -43,21 +43,21 @@ function bpi_render_admin_page() {
 
                             <div class="bpi-form-row source-input repository-source active">
                                 <label for="plugin-slugs"><?php _e('Plugin Slugs:', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="plugin-slugs" name="items" rows="8" 
+                                <textarea id="plugin-slugs" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter plugin slugs, one per line (e.g., akismet)', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>
 
                             <div class="bpi-form-row source-input wenpai-source">
                                 <label for="plugin-wenpai-slugs"><?php _e('Plugin Slugs (WenPai.org):', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="plugin-wenpai-slugs" name="items" rows="8" 
+                                <textarea id="plugin-wenpai-slugs" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter plugin slugs, one per line (e.g., akismet)', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>
 
                             <div class="bpi-form-row source-input url-source">
                                 <label for="plugin-urls"><?php _e('Download URLs:', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="plugin-urls" name="items" rows="8" 
+                                <textarea id="plugin-urls" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter download URLs, one per line', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>
@@ -98,21 +98,21 @@ function bpi_render_admin_page() {
 
                             <div class="bpi-form-row source-input repository-source active">
                                 <label for="theme-slugs"><?php _e('Theme Slugs:', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="theme-slugs" name="items" rows="8" 
+                                <textarea id="theme-slugs" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter theme slugs, one per line (e.g., twentytwenty)', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>
 
                             <div class="bpi-form-row source-input wenpai-source">
                                 <label for="theme-wenpai-slugs"><?php _e('Theme Slugs (WenPai.org):', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="theme-wenpai-slugs" name="items" rows="8" 
+                                <textarea id="theme-wenpai-slugs" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter theme slugs, one per line (e.g., twentytwenty)', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>
 
                             <div class="bpi-form-row source-input url-source">
                                 <label for="theme-urls"><?php _e('Download URLs:', 'bulk-plugin-installer'); ?></label>
-                                <textarea id="theme-urls" name="items" rows="8" 
+                                <textarea id="theme-urls" name="items" rows="8"
                                     placeholder="<?php esc_attr_e('Enter download URLs, one per line', 'bulk-plugin-installer'); ?>"
                                 ></textarea>
                             </div>

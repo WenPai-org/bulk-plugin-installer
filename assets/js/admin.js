@@ -1,4 +1,6 @@
 jQuery(document).ready(function($) {
+    const $results = $('#installation-results');
+
     $('.bpi-tab').on('click', function() {
         $('.bpi-tab').removeClass('active');
         $(this).addClass('active');
@@ -82,7 +84,6 @@ jQuery(document).ready(function($) {
         const action = $form.attr('id') === 'bulk-plugin-form' ? 'bpi_install_plugins' : 'bpi_install_themes';
         const type = $form.find('.bpi-select').val();
         const $submitButton = $form.find('button[type="submit"]');
-        const $results = $('#installation-results');
 
         let items = [];
         let errorMessage = '';
@@ -132,17 +133,19 @@ jQuery(document).ready(function($) {
                 processData: false,
                 contentType: false,
                 success: function(response) {
+                    console.log('Upload response:', response); // 调试输出
                     if (response.success) {
                         Object.keys(response.data).forEach((item, index) => {
                             handleResponse(response, item, index);
                         });
                     } else {
-                        $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${response.data}</span></li>`);
+                        $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${escapeHtml(response.data || 'Unknown upload error')}</span></li>`);
                     }
                     installationComplete();
                 },
                 error: function(xhr, status, error) {
-                    $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${xhr.responseText || error}</span></li>`);
+                    console.log('Upload error:', xhr, status, error); // 调试输出
+                    $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${escapeHtml(xhr.responseText || error)}</span></li>`);
                     installationComplete();
                 }
             });
@@ -169,10 +172,12 @@ jQuery(document).ready(function($) {
                     install_type: type
                 },
                 success: function(response) {
+                    console.log('Item response:', response); // 调试输出
                     handleResponse(response, item, index);
                     processNextItem(index + 1);
                 },
                 error: function(xhr, status, error) {
+                    console.log('Item error:', xhr, status, error); // 调试输出
                     handleError(xhr, status, error, item, index);
                     processNextItem(index + 1);
                 }
@@ -183,12 +188,23 @@ jQuery(document).ready(function($) {
             const $item = $(`#item-${index}`) || $list.find('li:last');
             $item.find('.spinner').removeClass('is-active');
 
-            if (response.success) {
+            if (response.success && response.data[item]) {
                 const result = response.data[item];
-                $item.addClass(result.success ? 'success' : 'error')
-                    .find('.status').text(result.success ? '✓ ' + result.message : '✗ ' + result.message);
+                $item.addClass(result.success ? 'success' : 'error');
+                let statusHtml = '';
+                if (result.success) {
+                    statusHtml = result.skipped ? 'ⓘ ' + escapeHtml(result.message) : '✓ ' + escapeHtml(result.message);
+                } else {
+                    statusHtml = '✗ ' + escapeHtml(result.message);
+                    if (result.retry) {
+                        statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>';
+                    }
+                }
+                $item.find('.status').html(statusHtml);
             } else {
-                $item.addClass('error').find('.status').text('✗ ' + (response.data || 'Unknown error'));
+                $item.addClass('error')
+                    .find('.status')
+                    .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>');
             }
 
             completed++;
@@ -201,7 +217,8 @@ jQuery(document).ready(function($) {
             const $item = $(`#item-${index}`) || $list.find('li:last');
             $item.find('.spinner').removeClass('is-active')
                 .addClass('error')
-                .find('.status').text(`✗ Installation failed: ${xhr.responseText || error}`);
+                .find('.status')
+                .html(`✗ ${escapeHtml(xhr.responseText || 'Installation failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">Retry</button>`);
             completed++;
             const percentage = Math.round((completed / items.length) * 100);
             const remaining = items.length - completed;
@@ -211,8 +228,58 @@ jQuery(document).ready(function($) {
         function installationComplete() {
             $submitButton.prop('disabled', false).text(`Install ${action === 'bpi_install_plugins' ? 'Plugins' : 'Themes'}`);
             const $notice = $results.find('.notice').removeClass('notice-info').addClass('notice-success');
-            $notice.find('p').text('Installation completed!');
+            $notice.find('p').html('Installation completed! Check the results below. Failed items can be retried using the "Retry" buttons if applicable.');
         }
+    });
+
+    $results.on('click', '.retry-btn', function() {
+        const $button = $(this);
+        const item = $button.data('item');
+        const type = $button.data('type');
+        const action = $('#bulk-plugin-form').is(':visible') ? 'bpi_install_plugins' : 'bpi_install_themes';
+        const $li = $button.closest('li');
+        $li.find('.spinner').addClass('is-active');
+        $li.find('.status').html('');
+
+        $.ajax({
+            url: bpiAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: action,
+                nonce: bpiAjax.nonce,
+                items: JSON.stringify([item]),
+                install_type: type
+            },
+            success: function(response) {
+                console.log('Retry response:', response); // 调试输出
+                $li.find('.spinner').removeClass('is-active');
+                if (response.success && response.data[item]) {
+                    const result = response.data[item];
+                    $li.removeClass('error success').addClass(result.success ? 'success' : 'error');
+                    let statusHtml = '';
+                    if (result.success) {
+                        statusHtml = result.skipped ? 'ⓘ ' + escapeHtml(result.message) : '✓ ' + escapeHtml(result.message);
+                    } else {
+                        statusHtml = '✗ ' + escapeHtml(result.message);
+                        if (result.retry) {
+                            statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>';
+                        }
+                    }
+                    $li.find('.status').html(statusHtml);
+                } else {
+                    $li.addClass('error')
+                        .find('.status')
+                        .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Retry error:', xhr, status, error); // 调试输出
+                $li.find('.spinner').removeClass('is-active')
+                    .addClass('error')
+                    .find('.status')
+                    .html(`✗ ${escapeHtml(xhr.responseText || 'Retry failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">Retry</button>`);
+            }
+        });
     });
 
     $('#bpi-settings-form').on('submit', function(e) {
@@ -224,8 +291,6 @@ jQuery(document).ready(function($) {
         $submitButton.prop('disabled', true).text('Saving...');
         $status.removeClass('notice-success notice-error').addClass('notice-info').text('Saving...').show();
 
-        const formData = $form.serialize(); // 使用 serialize() 而不是 serializeArray()
-        
         $.ajax({
             url: bpiAjax.ajaxurl,
             type: 'POST',

@@ -1,0 +1,31 @@
+{
+  "plugins": {
+    "repository": [
+      "woocommerce",
+      "wordpress-seo",
+      "elementor"
+    ],
+    "wenpai": [
+      "wpfanyi-import",
+      "wpavatar"
+    ],
+    "url": [
+      "https://downloads.wenpai.net/plugin/custom-plugin.zip",
+      "https://github.com/user/plugin/releases/download/v1.0/plugin.zip"
+    ]
+  },
+  "themes": {
+    "repository": [
+      "twentytwentyfive",
+      "astra"
+    ],
+    "wenpai": [
+      "weicommerce",
+      "justnote"
+    ],
+    "url": [
+      "https://downloads.wenpai.net/theme/custom-theme.zip",
+      "https://github.com/user/theme/releases/download/v1.0/theme.zip"
+    ]
+  }
+}

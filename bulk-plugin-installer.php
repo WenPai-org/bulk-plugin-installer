@@ -22,8 +22,8 @@ define('BPI_VERSION', '1.1.6');
 define('BPI_PATH', plugin_dir_path(__FILE__));
 define('BPI_URL', plugin_dir_url(__FILE__));
 
-require_once BPI_PATH . 'class-installer.php';
-require_once BPI_PATH . 'admin-page.php';
+require_once BPI_PATH . 'includes/class-installer.php';
+require_once BPI_PATH . 'includes/admin-page.php';
 
 function bpi_init() {
     if (is_multisite()) {
@@ -53,10 +53,10 @@ function bpi_add_menu_page() {
 
 function bpi_add_network_submenu_page() {
     add_submenu_page(
-        'plugins.php', 
+        'plugins.php',
         __('Plugin Installer', 'bulk-plugin-installer'),
         __('Plugin Installer', 'bulk-plugin-installer'),
-        'manage_network_plugins', 
+        'manage_network_plugins',
         'bulk-plugin-installer',
         'bpi_render_admin_page'
     );
@@ -69,7 +69,7 @@ define('BPI_TRUSTED_DOMAINS', [
     'github.com',
     'raw.githubusercontent.com',
     'wenpai.cn',
-    'wenpai.net',    
+    'wenpai.net',
     'wenpai.org',
     'downloads.wenpai.net',
     'weixiaoduo.com',
@@ -141,7 +141,7 @@ function bpi_is_domain_allowed($url) {
 
 function bpi_handle_install_plugins() {
     check_ajax_referer('bpi_installer', 'nonce');
-    
+
     if (!current_user_can('install_plugins') && !(is_multisite() && current_user_can('manage_network_plugins'))) {
         wp_send_json_error(__('Insufficient permissions', 'bulk-plugin-installer'));
     }
@@ -201,7 +201,7 @@ function bpi_handle_install_plugins() {
 
 function bpi_handle_install_themes() {
     check_ajax_referer('bpi_installer', 'nonce');
-    
+
     if (!current_user_can('install_themes') && !(is_multisite() && current_user_can('manage_network_plugins'))) {
         wp_send_json_error(__('Insufficient permissions', 'bulk-plugin-installer'));
     }

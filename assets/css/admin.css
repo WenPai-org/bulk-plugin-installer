@@ -193,3 +193,18 @@
     border-radius: 4px;
     margin: 10px 0;
 }
+
+.retry-btn {
+    background: #007cba;
+    color: #fff;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.retry-btn:hover {
+    background: #005a87;
+}
