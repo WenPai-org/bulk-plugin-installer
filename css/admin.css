@@ -1,0 +1,195 @@
+.bpi-wrap {
+    margin: 20px 0;
+}
+
+.bpi-container {
+    max-width: unset;
+}
+
+.bpi-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.bpi-tabs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    border-bottom: 1px solid #c3c4c7;
+    margin-bottom: 20px;
+}
+
+.bpi-tab {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    color: #23282d;
+}
+
+.bpi-tab.active {
+    border-bottom: 2px solid #007cba;
+    font-weight: 600;
+    background: #f0f0f1;
+}
+
+.bpi-tab:hover:not(.active) {
+    background: #f0f0f1;
+    border-bottom-color: #dcdcde;
+}
+
+.bpi-tab-content {
+    display: none;
+}
+
+.bpi-tab-content.active {
+    display: block;
+}
+
+.bpi-form-row {
+    margin: 15px 0;
+}
+
+.bpi-form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.bpi-select {
+    min-width: 200px;
+    height: 35px;
+    padding: 0 8px;
+}
+
+.bpi-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.file-upload-container {
+    border: 2px dashed #b4b9be;
+    padding: 20px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-container:hover,
+.file-upload-container.dragover {
+    border-color: #007cba;
+    background: #f0f0f1;
+}
+
+.file-upload-container input[type="file"] {
+    display: none;
+}
+
+.upload-instructions {
+    color: #666;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.selected-files {
+    margin-top: 15px;
+    text-align: left;
+}
+
+.selected-file {
+    background: #fff;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selected-file .remove-file {
+    color: #dc3232;
+    cursor: pointer;
+}
+
+.source-input {
+    display: none;
+}
+
+.source-input.active {
+    display: block;
+}
+
+.bpi-results .notice,
+#settings-status {
+    padding: 8px 12px;
+    border-radius: 3px;
+    margin-top: 10px;
+}
+
+.bpi-results .notice-success,
+#settings-status.notice-success {
+    background-color: #dff0d8;
+    border-left: 4px solid #46b450;
+}
+
+.bpi-results .notice-error,
+#settings-status.notice-error {
+    background-color: #f2dede;
+    border-left: 4px solid #dc3232;
+}
+
+.bpi-results .notice-info,
+#settings-status.notice-info {
+    background-color: #e5f5fa;
+    border-left: 4px solid #00a0d2;
+}
+
+.installation-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+}
+
+.installation-list li {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+}
+
+.installation-list .spinner {
+    margin: 0 10px 0 0;
+}
+
+.installation-list .item-name {
+    flex: 1;
+}
+
+.installation-list .status {
+    margin-left: 10px;
+}
+
+.installation-list .success {
+    color: #46b450;
+}
+
+.installation-list .error {
+    color: #dc3232;
+}
+
+.progress-count {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin: 10px 0;
+}
