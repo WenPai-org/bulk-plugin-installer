@@ -363,7 +363,6 @@ function bpi_add_plugin_url_upload_button() {
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                // 在插件上传按钮后添加URL上传按钮
                 $('.wp-header-end').before(
                     '<a href="<?php echo admin_url("plugins.php?page=bulk-plugin-installer&tab=plugins&install_type=url"); ?>" class="page-title-action"><?php _e("Upload from URL", "bulk-plugin-installer"); ?></a>'
                 );
@@ -380,7 +379,6 @@ function bpi_add_theme_url_upload_button() {
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                // 在主题上传按钮后添加URL上传按钮
                 $('.wp-header-end').before(
                     '<a href="<?php echo admin_url("plugins.php?page=bulk-plugin-installer&tab=themes&install_type=url"); ?>" class="page-title-action"><?php _e("Upload from URL", "bulk-plugin-installer"); ?></a>'
                 );
@@ -390,3 +388,14 @@ function bpi_add_theme_url_upload_button() {
     }
 }
 add_action('admin_footer-theme-install.php', 'bpi_add_theme_url_upload_button');
+
+
+// Integrate UpdatePulse Server for updates using PUC v5.3
+require_once plugin_dir_path(__FILE__) . 'lib/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5p3\PucFactory;
+
+$BulkPluginInstallerUpdateChecker = PucFactory::buildUpdateChecker(
+    'https://updates.weixiaoduo.com/bulk-plugin-installer.json',
+    __FILE__,
+    'bulk-plugin-installer'
+);
