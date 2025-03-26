@@ -6,9 +6,25 @@ function bpi_render_admin_page() {
 
     wp_enqueue_style('bpi-admin-style', BPI_URL . 'assets/css/admin.css', [], BPI_VERSION);
     wp_enqueue_script('bpi-admin', BPI_URL . 'assets/js/admin.js', ['jquery'], BPI_VERSION, true);
+    
+    $i18n_strings = [
+        'go_to_settings' => __('Go to Settings to add domain', 'bulk-plugin-installer'),
+        'switch_to_themes' => __('Switch to Themes tab', 'bulk-plugin-installer'),
+        'switch_to_plugins' => __('Switch to Plugins tab', 'bulk-plugin-installer'),
+        'retry' => __('Retry', 'bulk-plugin-installer'),
+        'installation_in_progress' => __('Installation in progress... (Large ZIP files may take some time)', 'bulk-plugin-installer'),
+        'completed' => __('completed', 'bulk-plugin-installer'),
+        'remaining' => __('remaining', 'bulk-plugin-installer'),
+        'installation_complete' => __('Installation completed! Check the results below. Failed items can be retried using the "Retry" buttons if applicable.', 'bulk-plugin-installer'),
+        'no_files' => __('Please select at least one ZIP file.', 'bulk-plugin-installer'),
+        'no_slugs' => __('Please enter at least one slug.', 'bulk-plugin-installer'),
+        'no_urls' => __('Please enter at least one URL.', 'bulk-plugin-installer')
+    ];
+    
     wp_localize_script('bpi-admin', 'bpiAjax', [
         'nonce' => wp_create_nonce('bpi_installer'),
-        'ajaxurl' => admin_url('admin-ajax.php')
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'i18n' => $i18n_strings
     ]);
     ?>
     <div class="wrap">

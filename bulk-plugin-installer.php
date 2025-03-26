@@ -3,8 +3,8 @@
  * Plugin Name: Bulk Plugin Installer
  * Plugin URI: https://wpmultisite.com/plugins/bulk-plugin-installer/
  * Description: Bulk install WordPress plugins and themes from repository, URL, or ZIP uploads.
- * Version: 1.1.6
- * Author: 	WPMultisite.com
+ * Version: 1.1.7
+ * Author: WPMultisite.com
  * Author URI: https://wpmultisite.com
  * Network: true
  * Requires at least: 5.8
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('BPI_VERSION', '1.1.6');
+define('BPI_VERSION', '1.1.7');
 define('BPI_PATH', plugin_dir_path(__FILE__));
 define('BPI_URL', plugin_dir_url(__FILE__));
 
@@ -26,6 +26,8 @@ require_once BPI_PATH . 'includes/class-installer.php';
 require_once BPI_PATH . 'includes/admin-page.php';
 
 function bpi_init() {
+    load_plugin_textdomain('bulk-plugin-installer', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+
     if (is_multisite()) {
         if (is_network_admin()) {
             add_action('network_admin_menu', 'bpi_add_network_submenu_page');
@@ -143,7 +145,10 @@ function bpi_handle_install_plugins() {
     check_ajax_referer('bpi_installer', 'nonce');
 
     if (!current_user_can('install_plugins') && !(is_multisite() && current_user_can('manage_network_plugins'))) {
-        wp_send_json_error(__('Insufficient permissions', 'bulk-plugin-installer'));
+        wp_send_json_error([
+            'message' => __('Insufficient permissions', 'bulk-plugin-installer'),
+            'error_code' => 403
+        ]);
     }
 
     $installer = new BPI_Installer();
@@ -153,7 +158,10 @@ function bpi_handle_install_plugins() {
     try {
         if ($type === 'upload') {
             if (!isset($_FILES['plugin_files']) || empty($_FILES['plugin_files']['name'])) {
-                wp_send_json_error(__('No files uploaded', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No files uploaded', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $files = [];
             if (is_array($_FILES['plugin_files']['name'])) {
@@ -181,13 +189,19 @@ function bpi_handle_install_plugins() {
                 }
             }
             if (empty($files)) {
-                wp_send_json_error(__('No valid files uploaded', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No valid files uploaded', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $results = $installer->bpi_install_plugins($files, $type);
         } else {
             $items = isset($_POST['items']) ? json_decode(stripslashes($_POST['items']), true) : [];
             if (!is_array($items) || empty($items)) {
-                wp_send_json_error(__('No items provided', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No items provided', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $results = $installer->bpi_install_plugins($items, $type);
         }
@@ -195,7 +209,10 @@ function bpi_handle_install_plugins() {
         wp_send_json_success($results);
     } catch (Exception $e) {
         error_log('BPI Plugin Install Error: ' . $e->getMessage());
-        wp_send_json_error(__('Installation failed: ', 'bulk-plugin-installer') . $e->getMessage());
+        wp_send_json_error([
+            'message' => $installer->get_error_message($e->getCode(), $e->getMessage()),
+            'error_code' => $e->getCode()
+        ]);
     }
 }
 
@@ -203,7 +220,10 @@ function bpi_handle_install_themes() {
     check_ajax_referer('bpi_installer', 'nonce');
 
     if (!current_user_can('install_themes') && !(is_multisite() && current_user_can('manage_network_plugins'))) {
-        wp_send_json_error(__('Insufficient permissions', 'bulk-plugin-installer'));
+        wp_send_json_error([
+            'message' => __('Insufficient permissions', 'bulk-plugin-installer'),
+            'error_code' => 403
+        ]);
     }
 
     $installer = new BPI_Installer();
@@ -213,7 +233,10 @@ function bpi_handle_install_themes() {
     try {
         if ($type === 'upload') {
             if (!isset($_FILES['theme_files']) || empty($_FILES['theme_files']['name'])) {
-                wp_send_json_error(__('No files uploaded', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No files uploaded', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $files = [];
             if (is_array($_FILES['theme_files']['name'])) {
@@ -241,13 +264,19 @@ function bpi_handle_install_themes() {
                 }
             }
             if (empty($files)) {
-                wp_send_json_error(__('No valid files uploaded', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No valid files uploaded', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $results = $installer->bpi_install_themes($files, $type);
         } else {
             $items = isset($_POST['items']) ? json_decode(stripslashes($_POST['items']), true) : [];
             if (!is_array($items) || empty($items)) {
-                wp_send_json_error(__('No items provided', 'bulk-plugin-installer'));
+                wp_send_json_error([
+                    'message' => __('No items provided', 'bulk-plugin-installer'),
+                    'error_code' => 400
+                ]);
             }
             $results = $installer->bpi_install_themes($items, $type);
         }
@@ -255,7 +284,10 @@ function bpi_handle_install_themes() {
         wp_send_json_success($results);
     } catch (Exception $e) {
         error_log('BPI Theme Install Error: ' . $e->getMessage());
-        wp_send_json_error(__('Installation failed: ', 'bulk-plugin-installer') . $e->getMessage());
+        wp_send_json_error([
+            'message' => $installer->get_error_message($e->getCode(), $e->getMessage()),
+            'error_code' => $e->getCode()
+        ]);
     }
 }
 
@@ -263,7 +295,10 @@ function bpi_handle_save_settings() {
     check_ajax_referer('bpi_installer', 'nonce');
 
     if (!current_user_can('manage_options') && !(is_multisite() && current_user_can('manage_network_options'))) {
-        wp_send_json_error(__('Insufficient permissions', 'bulk-plugin-installer'));
+        wp_send_json_error([
+            'message' => __('Insufficient permissions', 'bulk-plugin-installer'),
+            'error_code' => 403
+        ]);
     }
 
     $roles = isset($_POST['bpi_allowed_roles']) ? (array)$_POST['bpi_allowed_roles'] : [];

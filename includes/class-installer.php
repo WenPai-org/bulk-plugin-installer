@@ -1,6 +1,24 @@
 <?php
 class BPI_Installer {
     private $wp_filesystem;
+    
+    private $error_messages = [
+        // Plugin error codes
+        1001 => 'Invalid plugin slug format. Please use only lowercase letters, numbers and hyphens.',
+        1004 => 'Invalid URL format. Please provide a complete URL including http:// or https://',
+        1005 => 'The domain is not in the trusted list. Please add it in settings or use another source.',
+        1007 => 'Only ZIP files are allowed for plugin uploads.',
+        1009 => 'This appears to be a theme ZIP file. Please use the Themes tab for installation.',
+        1010 => 'The uploaded file is not a valid WordPress plugin ZIP.',
+        
+        // Theme error codes
+        2001 => 'Invalid theme slug format. Please use only lowercase letters, numbers and hyphens.',
+        2003 => 'Only ZIP files are allowed for theme uploads.',
+        2005 => 'This appears to be a plugin ZIP file. Please use the Plugins tab for installation.',
+        2006 => 'The uploaded file is not a valid WordPress theme ZIP.',
+        2009 => 'Invalid URL format for theme. Please provide a complete URL including http:// or https://',
+        2010 => 'The domain is not in the trusted list for themes. Please add it in settings or use another source.'
+    ];
 
     public function __construct() {
         global $wp_filesystem;
@@ -11,6 +29,10 @@ class BPI_Installer {
             }
         }
         $this->wp_filesystem = $wp_filesystem;
+    }
+
+    public function get_error_message($code, $default_message) {
+        return __($this->error_messages[$code] ?? $default_message, 'bulk-plugin-installer');
     }
 
     private function is_plugin_zip($zip_path) {
@@ -69,7 +91,10 @@ class BPI_Installer {
                 if ($type === 'repository' || $type === 'wenpai') {
                     $item = sanitize_text_field($item);
                     if (!preg_match('/^[a-z0-9-]+$/', $item)) {
-                        throw new Exception('Invalid plugin slug', 1001);
+                        throw new Exception(
+                            $this->get_error_message(1001, 'Invalid plugin slug'), 
+                            1001
+                        );
                     }
                     $plugin_key = $item . '/' . $item . '.php';
                 } elseif ($type === 'upload') {
@@ -94,7 +119,10 @@ class BPI_Installer {
                             'fields' => ['sections' => false]
                         ]);
                         if (is_wp_error($api)) {
-                            throw new Exception('Failed to fetch plugin info: ' . $api->get_error_message(), 1002);
+                            throw new Exception(
+                                $this->get_error_message(1002, 'Failed to fetch plugin info: ' . $api->get_error_message()), 
+                                1002
+                            );
                         }
                         $download_link = $api->download_link;
                         break;
@@ -103,7 +131,10 @@ class BPI_Installer {
                         $response = wp_remote_get("https://api.wenpai.net/wp-json/wp/v2/plugins/{$item}");
                         if (is_wp_error($response)) {
                             $code = wp_remote_retrieve_response_code($response);
-                            throw new Exception("Download failed with status code $code: " . $response->get_error_message(), 1003);
+                            throw new Exception(
+                                $this->get_error_message(1003, "Download failed with status code $code: " . $response->get_error_message()), 
+                                1003
+                            );
                         }
                         $plugin_data = json_decode(wp_remote_retrieve_body($response), true);
                         $download_link = $plugin_data && !empty($plugin_data['download_link']) 
@@ -114,10 +145,16 @@ class BPI_Installer {
                     case 'url':
                         $item = sanitize_text_field($item);
                         if (!filter_var($item, FILTER_VALIDATE_URL)) {
-                            throw new Exception('Invalid URL format', 1004);
+                            throw new Exception(
+                                $this->get_error_message(1004, 'Invalid URL format'), 
+                                1004
+                            );
                         }
                         if (!bpi_is_domain_allowed($item)) {
-                            throw new Exception('Untrusted domain', 1005);
+                            throw new Exception(
+                                $this->get_error_message(1005, 'Untrusted domain'), 
+                                1005
+                            );
                         }
                         $download_link = $item;
                         break;
@@ -125,27 +162,42 @@ class BPI_Installer {
                     case 'upload':
                         $file = $item;
                         if ($file['error'] !== UPLOAD_ERR_OK) {
-                            throw new Exception('File upload error: ' . $file['error'], 1006);
+                            throw new Exception(
+                                $this->get_error_message(1006, 'File upload error: ' . $file['error']), 
+                                1006
+                            );
                         }
                         $file_name = sanitize_file_name($file['name']);
                         if (pathinfo($file_name, PATHINFO_EXTENSION) !== 'zip') {
-                            throw new Exception('Only ZIP files are allowed', 1007);
+                            throw new Exception(
+                                $this->get_error_message(1007, 'Only ZIP files are allowed'), 
+                                1007
+                            );
                         }
                         $temp_file = $file['tmp_name'];
                         $upload_dir = wp_upload_dir();
                         $dest_path = $upload_dir['path'] . '/' . $file_name;
 
                         if (!move_uploaded_file($temp_file, $dest_path)) {
-                            throw new Exception('Failed to move uploaded file. Check server permissions.', 1008);
+                            throw new Exception(
+                                $this->get_error_message(1008, 'Failed to move uploaded file. Check server permissions.'), 
+                                1008
+                            );
                         }
 
                         if (!$this->is_plugin_zip($dest_path)) {
                             if ($this->is_theme_zip($dest_path)) {
                                 unlink($dest_path);
-                                throw new Exception('This appears to be a theme ZIP. Please use the Plugins tab to install.', 1009);
+                                throw new Exception(
+                                    $this->get_error_message(1009, 'Theme ZIP detected'), 
+                                    1009
+                                );
                             }
                             unlink($dest_path);
-                            throw new Exception('Invalid plugin ZIP file', 1010);
+                            throw new Exception(
+                                $this->get_error_message(1010, 'Invalid plugin ZIP'), 
+                                1010
+                            );
                         }
 
                         $download_link = $dest_path;
@@ -160,20 +212,26 @@ class BPI_Installer {
 
                 if (is_wp_error($result)) {
                     $error_message = $result->get_error_message();
-                    throw new Exception($error_message ?: 'Unknown installation error', 1011);
+                    throw new Exception(
+                        $this->get_error_message(1011, $error_message ?: 'Unknown installation error'), 
+                        1011
+                    );
                 } elseif ($result !== true) {
-                    throw new Exception('Installation failed unexpectedly', 1012);
+                    throw new Exception(
+                        $this->get_error_message(1012, 'Installation failed unexpectedly'), 
+                        1012
+                    );
                 }
 
                 $results[$item] = [
                     'success' => true,
-                    'message' => 'Successfully installed'
+                    'message' => __('Successfully installed', 'bulk-plugin-installer')
                 ];
             } catch (Exception $e) {
-                $no_retry_codes = [1001, 1004, 1005, 1007, 1009, 1010]; // 无需重试的错误代码
+                $no_retry_codes = [1001, 1004, 1005, 1007, 1009, 1010];
                 $results[$item] = [
                     'success' => false,
-                    'message' => $e->getMessage(),
+                    'message' => $this->get_error_message($e->getCode(), $e->getMessage()),
                     'error_code' => $e->getCode(),
                     'retry' => !in_array($e->getCode(), $no_retry_codes)
                 ];
@@ -207,24 +265,36 @@ class BPI_Installer {
                 if ($type === 'repository' || $type === 'wenpai') {
                     $item = sanitize_text_field($item);
                     if (!preg_match('/^[a-z0-9-]+$/', $item)) {
-                        throw new Exception('Invalid theme slug', 2001);
+                        throw new Exception(
+                            $this->get_error_message(2001, 'Invalid theme slug'), 
+                            2001
+                        );
                     }
                     $theme_key = $item;
                 } elseif ($type === 'upload') {
                     $file = $item;
                     if ($file['error'] !== UPLOAD_ERR_OK) {
-                        throw new Exception('File upload error: ' . $file['error'], 2002);
+                        throw new Exception(
+                            $this->get_error_message(2002, 'File upload error: ' . $file['error']), 
+                            2002
+                        );
                     }
                     $file_name = sanitize_file_name($file['name']);
                     if (pathinfo($file_name, PATHINFO_EXTENSION) !== 'zip') {
-                        throw new Exception('Only ZIP files are allowed', 2003);
+                        throw new Exception(
+                            $this->get_error_message(2003, 'Only ZIP files are allowed'), 
+                            2003
+                        );
                     }
                     $temp_file = $file['tmp_name'];
                     $upload_dir = wp_upload_dir();
                     $dest_path = $upload_dir['path'] . '/' . $file_name;
 
                     if (!move_uploaded_file($temp_file, $dest_path)) {
-                        throw new Exception('Failed to move uploaded file. Check server permissions.', 2004);
+                        throw new Exception(
+                            $this->get_error_message(2004, 'Failed to move uploaded file. Check server permissions.'), 
+                            2004
+                        );
                     }
 
                     $zip = new ZipArchive();
@@ -249,7 +319,7 @@ class BPI_Installer {
                         }
                         $results[$file_name] = [
                             'success' => true,
-                            'message' => 'Theme already installed, skipped',
+                            'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
                             'skipped' => true
                         ];
                         continue;
@@ -258,10 +328,16 @@ class BPI_Installer {
                     if (!$this->is_theme_zip($dest_path)) {
                         if ($this->is_plugin_zip($dest_path)) {
                             unlink($dest_path);
-                            throw new Exception('This appears to be a plugin ZIP. Please use the Plugins tab to install.', 2005);
+                            throw new Exception(
+                                $this->get_error_message(2005, 'Plugin ZIP detected'), 
+                                2005
+                            );
                         }
                         unlink($dest_path);
-                        throw new Exception('Invalid theme ZIP file', 2006);
+                        throw new Exception(
+                            $this->get_error_message(2006, 'Invalid theme ZIP'), 
+                            2006
+                        );
                     }
 
                     $download_link = $dest_path;
@@ -271,7 +347,7 @@ class BPI_Installer {
                     if ($theme_key && array_key_exists($theme_key, $installed_themes)) {
                         $results[$item] = [
                             'success' => true,
-                            'message' => 'Theme already installed, skipped',
+                            'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
                             'skipped' => true
                         ];
                         continue;
@@ -285,7 +361,10 @@ class BPI_Installer {
                             'fields' => ['sections' => false]
                         ]);
                         if (is_wp_error($api)) {
-                            throw new Exception('Failed to fetch theme info: ' . $api->get_error_message(), 2007);
+                            throw new Exception(
+                                $this->get_error_message(2007, 'Failed to fetch theme info: ' . $api->get_error_message()), 
+                                2007
+                            );
                         }
                         $download_link = $api->download_link;
                         break;
@@ -294,7 +373,10 @@ class BPI_Installer {
                         $response = wp_remote_get("https://api.wenpai.net/wp-json/wp/v2/themes/{$item}");
                         if (is_wp_error($response)) {
                             $code = wp_remote_retrieve_response_code($response);
-                            throw new Exception("Download failed with status code $code: " . $response->get_error_message(), 2008);
+                            throw new Exception(
+                                $this->get_error_message(2008, "Download failed with status code $code: " . $response->get_error_message()), 
+                                2008
+                            );
                         }
                         $theme_data = json_decode(wp_remote_retrieve_body($response), true);
                         $download_link = $theme_data && !empty($theme_data['download_link']) 
@@ -305,16 +387,22 @@ class BPI_Installer {
                     case 'url':
                         $item = sanitize_text_field($item);
                         if (!filter_var($item, FILTER_VALIDATE_URL)) {
-                            throw new Exception('Invalid URL format', 2009);
+                            throw new Exception(
+                                $this->get_error_message(2009, 'Invalid URL format'), 
+                                2009
+                            );
                         }
                         if (!bpi_is_domain_allowed($item)) {
-                            throw new Exception('Untrusted domain', 2010);
+                            throw new Exception(
+                                $this->get_error_message(2010, 'Untrusted domain'), 
+                                2010
+                            );
                         }
                         $download_link = $item;
                         break;
 
                     case 'upload':
-                        // 已在上方处理
+                        // Already handled above
                         break;
                 }
 
@@ -325,20 +413,26 @@ class BPI_Installer {
 
                 if (is_wp_error($result)) {
                     $error_message = $result->get_error_message();
-                    throw new Exception($error_message ?: 'Unknown installation error', 2011);
+                    throw new Exception(
+                        $this->get_error_message(2011, $error_message ?: 'Unknown installation error'), 
+                        2011
+                    );
                 } elseif ($result !== true) {
-                    throw new Exception('Installation failed unexpectedly', 2012);
+                    throw new Exception(
+                        $this->get_error_message(2012, 'Installation failed unexpectedly'), 
+                        2012
+                    );
                 }
 
                 $results[$item] = [
                     'success' => true,
-                    'message' => 'Successfully installed'
+                    'message' => __('Successfully installed', 'bulk-plugin-installer')
                 ];
             } catch (Exception $e) {
-                $no_retry_codes = [2001, 2003, 2005, 2006, 2009, 2010]; // 无需重试的错误代码
+                $no_retry_codes = [2001, 2003, 2005, 2006, 2009, 2010];
                 $results[$item] = [
                     'success' => false,
-                    'message' => $e->getMessage(),
+                    'message' => $this->get_error_message($e->getCode(), $e->getMessage()),
                     'error_code' => $e->getCode(),
                     'retry' => !in_array($e->getCode(), $no_retry_codes)
                 ];
