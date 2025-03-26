@@ -1,0 +1,382 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Bulk Plugin Installer\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-26 03:53+0000\n"
+"PO-Revision-Date: 2025-03-26 06:56+0000\n"
+"Last-Translator: \n"
+"Language-Team: 简体中文\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.11; wp-6.7.2\n"
+"X-Domain: bulk-plugin-installer\n"
+
+#: includes/admin-page.php:181
+msgid "Additional Trusted Domains"
+msgstr "其他受信任域"
+
+#: includes/admin-page.php:166
+msgid "Allowed Roles"
+msgstr "允许角色"
+
+#. Description of the plugin
+msgid ""
+"Bulk install WordPress plugins and themes from repository, URL, or ZIP "
+"uploads."
+msgstr "从存储库、URL 或 ZIP 上传批量安装 WordPress 插件和主题。"
+
+#: includes/admin-page.php:31
+msgid "Bulk Plugin & Theme Installer"
+msgstr "批量插件和主题安装器"
+
+#. Name of the plugin
+msgid "Bulk Plugin Installer"
+msgstr "批量插件安装器"
+
+#: includes/admin-page.php:16
+msgid "completed"
+msgstr "已完成"
+
+#: includes/admin-page.php:158
+msgid "Configure plugin installation settings."
+msgstr "配置插件安装设置。"
+
+#: includes/admin-page.php:33
+msgid "Document"
+msgstr "文档"
+
+#: includes/admin-page.php:75 includes/admin-page.php:130
+msgid "Download URLs:"
+msgstr "下载网址："
+
+#: includes/admin-page.php:86
+msgid "Drag and drop plugin ZIP files here or click to select files"
+msgstr "将插件 ZIP 文件拖放到此处或单击选择文件"
+
+#: includes/admin-page.php:141
+msgid "Drag and drop theme ZIP files here or click to select files"
+msgstr "将主题 ZIP 文件拖放到此处或单击以选择文件"
+
+#: includes/admin-page.php:77 includes/admin-page.php:132
+msgid "Enter download URLs, one per line"
+msgstr "输入下载网址，每行一个"
+
+#: includes/admin-page.php:183
+msgid "Enter one root domain per line (e.g., example.com)"
+msgstr "每行输入一个根域名（例如 example.com）"
+
+#: includes/admin-page.php:63 includes/admin-page.php:70
+msgid "Enter plugin slugs, one per line (e.g., akismet)"
+msgstr "输入插件 slug，每行一个（例如 akismet）"
+
+#: includes/admin-page.php:186
+msgid ""
+"Enter root domains (one per line) for remote installation. Subdomains are "
+"automatically included."
+msgstr "输入用于远程安装的根域（每行一个）。子域将自动包含在内。"
+
+#: includes/admin-page.php:118 includes/admin-page.php:125
+msgid "Enter theme slugs, one per line (e.g., twentytwenty)"
+msgstr "输入主题 slug，每行一个（例如，twentytwenty）"
+
+#: includes/admin-page.php:228
+msgid "Failed Installs"
+msgstr "安装失败"
+
+#: includes/admin-page.php:11
+msgid "Go to Settings to add domain"
+msgstr "前往“设置”添加域"
+
+#. Author URI of the plugin
+msgid "https://wpmultisite.com"
+msgstr "https://wpmultisite.com"
+
+#. URI of the plugin
+msgid "https://wpmultisite.com/plugins/bulk-plugin-installer/"
+msgstr "https://wpmultisite.com/plugins/bulk-plugin-installer/"
+
+#: includes/admin-page.php:48
+msgid "Install multiple plugins from various sources."
+msgstr "从不同来源安装多个插件。"
+
+#: includes/admin-page.php:103
+msgid "Install multiple themes from various sources."
+msgstr "从不同来源安装多个主题。"
+
+#: includes/admin-page.php:47 includes/admin-page.php:95
+msgid "Install Plugins"
+msgstr "安装插件"
+
+#: includes/admin-page.php:102 includes/admin-page.php:150
+msgid "Install Themes"
+msgstr "安装主题"
+
+#: includes/admin-page.php:18
+msgid ""
+"Installation completed! Check the results below. Failed items can be retried "
+"using the \"Retry\" buttons if applicable."
+msgstr "安装已完成！检查以下结果。如果适用，可以使用“重试”按钮重试失败的项目。"
+
+#: includes/admin-page.php:15
+msgid "Installation in progress... (Large ZIP files may take some time)"
+msgstr "正在安装...（较大的 ZIP 文件可能需要一些时间）"
+
+#: includes/admin-page.php:51 includes/admin-page.php:106
+msgid "Installation Source:"
+msgstr "安装来源："
+
+#: bulk-plugin-installer.php:147 bulk-plugin-installer.php:222
+#: bulk-plugin-installer.php:297
+msgid "Insufficient permissions"
+msgstr "权限不足"
+
+#: includes/class-installer.php:75 includes/class-installer.php:249
+msgid "Invalid installation type"
+msgstr "安装类型无效"
+
+#: includes/class-installer.php:19
+msgid ""
+"Invalid plugin slug format. Please use only lowercase letters, numbers and "
+"hyphens."
+msgstr "插件 slug 格式无效。请仅使用小写字母、数字和连字符。"
+
+#: includes/class-installer.php:26
+msgid ""
+"Invalid theme slug format. Please use only lowercase letters, numbers and "
+"hyphens."
+msgstr "主题 slug 格式无效。请仅使用小写字母、数字和连字符。"
+
+#: includes/class-installer.php:30
+msgid ""
+"Invalid URL format for theme. Please provide a complete URL including http:"
+"// or https://"
+msgstr "主题的 URL 格式无效。请提供完整的 URL，包括 http:// 或 https://"
+
+#: includes/class-installer.php:20
+msgid ""
+"Invalid URL format. Please provide a complete URL including http:// or https:"
+"//"
+msgstr "URL 格式无效。请提供完整的 URL，包括 http:// 或 https://"
+
+#: includes/admin-page.php:232
+msgid "Last Install Time"
+msgstr "上次安装时间"
+
+#: includes/admin-page.php:214
+msgid "Metric"
+msgstr "参数"
+
+#: includes/admin-page.php:233
+msgid "Never Installed"
+msgstr "从未安装"
+
+#: bulk-plugin-installer.php:160 bulk-plugin-installer.php:235
+msgid "No files uploaded"
+msgstr "沒有上传文件"
+
+#: bulk-plugin-installer.php:200 bulk-plugin-installer.php:275
+#: includes/class-installer.php:79 includes/class-installer.php:253
+msgid "No items provided"
+msgstr "沒有提供任何項目"
+
+#: bulk-plugin-installer.php:191 bulk-plugin-installer.php:266
+msgid "No valid files uploaded"
+msgstr "未上传有效文件"
+
+#: includes/class-installer.php:22
+msgid "Only ZIP files are allowed for plugin uploads."
+msgstr "仅允许上传 ZIP 文件插件。"
+
+#: includes/class-installer.php:27
+msgid "Only ZIP files are allowed for theme uploads."
+msgstr "仅允许上传 ZIP 文件主题。"
+
+#: includes/admin-page.php:20
+msgid "Please enter at least one slug."
+msgstr "请输入至少一个 slug。"
+
+#: includes/admin-page.php:21
+msgid "Please enter at least one URL."
+msgstr "请输入至少一个网址。"
+
+#: includes/admin-page.php:19
+msgid "Please select at least one ZIP file."
+msgstr "请至少选择一个 ZIP 文件。"
+
+#: includes/class-installer.php:110
+msgid "Plugin already installed, skipped"
+msgstr "插件已安装，已跳过"
+
+#: bulk-plugin-installer.php:47 bulk-plugin-installer.php:48
+#: bulk-plugin-installer.php:59 bulk-plugin-installer.php:60
+msgid "Plugin Installer"
+msgstr "插件安装器"
+
+#: includes/admin-page.php:68
+msgid "Plugin Slugs (WenPai.org):"
+msgstr "插件 Slugs (WenPai.org):"
+
+#: includes/admin-page.php:61
+msgid "Plugin Slugs:"
+msgstr "插件 Slugs ："
+
+#: includes/admin-page.php:41
+msgid "Plugins"
+msgstr "插件"
+
+#: includes/admin-page.php:17
+msgid "remaining"
+msgstr "剩余"
+
+#: includes/admin-page.php:55 includes/admin-page.php:110
+msgid "Remote URL"
+msgstr "远程 URL"
+
+#: includes/admin-page.php:14
+msgid "Retry"
+msgstr "重试"
+
+#: includes/admin-page.php:190
+msgid "Save Settings"
+msgstr "保存设置"
+
+#: includes/admin-page.php:43 includes/admin-page.php:157
+msgid "Settings"
+msgstr "设置"
+
+#: bulk-plugin-installer.php:308
+msgid "Settings saved successfully!"
+msgstr "设置保存成功！"
+
+#: includes/admin-page.php:201
+msgid "Statistics"
+msgstr "统计数据"
+
+#: includes/admin-page.php:224
+msgid "Successful Installs"
+msgstr "成功安装"
+
+#: includes/class-installer.php:230 includes/class-installer.php:431
+msgid "Successfully installed"
+msgstr "安装成功"
+
+#: includes/admin-page.php:34
+msgid "Support"
+msgstr "支持"
+
+#: includes/admin-page.php:13
+msgid "Switch to Plugins tab"
+msgstr "切换到插件选项卡"
+
+#: includes/admin-page.php:12
+msgid "Switch to Themes tab"
+msgstr "切换到主题选项卡"
+
+#: includes/class-installer.php:31
+msgid ""
+"The domain is not in the trusted list for themes. Please add it in settings "
+"or use another source."
+msgstr "该域名不在主题的受信任列表中。请在设置中添加它或使用其他来源。"
+
+#: includes/class-installer.php:21
+msgid ""
+"The domain is not in the trusted list. Please add it in settings or use "
+"another source."
+msgstr "该域名不在受信任列表中。请在设置中添加它或使用其他来源。"
+
+#: includes/class-installer.php:24
+msgid "The uploaded file is not a valid WordPress plugin ZIP."
+msgstr "上传的文件不是有效的 WordPress 插件 ZIP。"
+
+#: includes/class-installer.php:29
+msgid "The uploaded file is not a valid WordPress theme ZIP."
+msgstr "上传的文件不是有效的 WordPress 主题 ZIP。"
+
+#: includes/class-installer.php:324 includes/class-installer.php:352
+msgid "Theme already installed, skipped"
+msgstr "主题已安装，已跳过"
+
+#: includes/admin-page.php:123
+msgid "Theme Slugs (WenPai.org):"
+msgstr "主题 Slugs  (WenPai.org):"
+
+#: includes/admin-page.php:116
+msgid "Theme Slugs:"
+msgstr "主题 Slugs ："
+
+#: includes/admin-page.php:42
+msgid "Themes"
+msgstr "主题"
+
+#: includes/class-installer.php:28
+msgid ""
+"This appears to be a plugin ZIP file. Please use the Plugins tab for "
+"installation."
+msgstr "这似乎是一个插件 ZIP 文件。请使用“插件”选项卡进行安装。"
+
+#: includes/class-installer.php:23
+msgid ""
+"This appears to be a theme ZIP file. Please use the Themes tab for "
+"installation."
+msgstr "这似乎是一个主题 ZIP 文件。请使用“主题”选项卡进行安装。"
+
+#: bulk-plugin-installer.php:336
+msgid "This plugin requires PHP 7.4 or higher."
+msgstr "此插件需要 PHP 7.4 或更高版本。"
+
+#: includes/admin-page.php:220
+msgid "Total Installs"
+msgstr "总安装量"
+
+#: includes/class-installer.php:11
+msgid "Unable to initialize filesystem. Please check server permissions."
+msgstr "无法初始化文件系统。请检查服务器权限。"
+
+#: bulk-plugin-installer.php:364 bulk-plugin-installer.php:375
+msgid "Upload from URL"
+msgstr "从 URL 上传"
+
+#: includes/admin-page.php:56 includes/admin-page.php:111
+msgid "Upload ZIP"
+msgstr "上传 ZIP"
+
+#: includes/admin-page.php:215
+msgid "Value"
+msgstr "数值"
+
+#: includes/admin-page.php:32
+#, php-format
+msgid "Version: %s"
+msgstr "版本： %s"
+
+#: includes/admin-page.php:202
+msgid "View statistics of plugin and theme installations."
+msgstr "查看插件和主题安装的统计数据。"
+
+#: includes/admin-page.php:54 includes/admin-page.php:109
+msgid "WenPai.org Repository (China Mirror)"
+msgstr "WenPai.org 存储库（中国镜像）"
+
+#: includes/admin-page.php:53 includes/admin-page.php:108
+msgid "WordPress.org Repository"
+msgstr "WordPress.org 存储库"
+
+#. Author of the plugin
+msgid "WPMultisite.com"
+msgstr "文派多站点"
+
+#: includes/admin-page.php:4
+msgid "You do not have sufficient permissions to access this page."
+msgstr "您没有足够的权限访问此页面。"
+
+#: includes/admin-page.php:161
+msgid "You need administrator privileges to modify these settings."
+msgstr "您需要管理员权限才能修改这些设置。"
+
+#: includes/admin-page.php:82 includes/admin-page.php:137
+msgid "ZIP Files:"
+msgstr "ZIP 文件："

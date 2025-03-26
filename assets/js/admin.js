@@ -1,6 +1,16 @@
 jQuery(document).ready(function($) {
     const $results = $('#installation-results');
 
+    // Handle URL parameter for tab selection
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        $('.bpi-tab').removeClass('active');
+        $('.bpi-tab[data-tab="' + tab + '"]').addClass('active');
+        $('.bpi-tab-content').removeClass('active').hide();
+        $('#' + tab).addClass('active').show();
+    }
+
     $('.bpi-tab').on('click', function() {
         $('.bpi-tab').removeClass('active');
         $(this).addClass('active');
@@ -92,7 +102,7 @@ jQuery(document).ready(function($) {
             const $fileInput = $form.find('input[type="file"]');
             const files = $fileInput[0].files;
             if (!files || files.length === 0) {
-                errorMessage = 'Please select at least one ZIP file.';
+                errorMessage = bpiAjax.i18n.no_files;
             } else {
                 items = Array.from(files).map(file => file.name);
             }
@@ -103,8 +113,8 @@ jQuery(document).ready(function($) {
                 .filter(item => item.length > 0);
             if (items.length === 0) {
                 errorMessage = (type === 'repository' || type === 'wenpai') ? 
-                    'Please enter at least one slug.' : 
-                    'Please enter at least one URL.';
+                    bpiAjax.i18n.no_slugs : 
+                    bpiAjax.i18n.no_urls;
             }
         }
 
@@ -114,7 +124,7 @@ jQuery(document).ready(function($) {
         }
 
         $submitButton.prop('disabled', true).text('Installing...');
-        $results.html(`<div class="notice notice-info"><p>Installation in progress... (Large ZIP files may take some time)</p><div class="progress-count">0/${items.length} completed (0% done, ${items.length} remaining)</div><ul class="installation-list"></ul></div>`);
+        $results.html(`<div class="notice notice-info"><p>${bpiAjax.i18n.installation_in_progress}</p><div class="progress-count">0/${items.length} ${bpiAjax.i18n.completed} (0% done, ${items.length} ${bpiAjax.i18n.remaining})</div><ul class="installation-list"></ul></div>`);
 
         const $list = $results.find('.installation-list');
         const $progress = $results.find('.progress-count');
@@ -133,19 +143,19 @@ jQuery(document).ready(function($) {
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    console.log('Upload response:', response); // 调试输出
+                    console.log('Upload response:', response);
                     if (response.success) {
                         Object.keys(response.data).forEach((item, index) => {
                             handleResponse(response, item, index);
                         });
                     } else {
-                        $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${escapeHtml(response.data || 'Unknown upload error')}</span></li>`);
+                        $list.append(`<li><span class="item-name">${escapeHtml('Upload Error')}</span><span class="status error">✗ ${escapeHtml(response.data || 'Unknown upload error')}</span></li>`);
                     }
                     installationComplete();
                 },
                 error: function(xhr, status, error) {
-                    console.log('Upload error:', xhr, status, error); // 调试输出
-                    $list.append(`<li><span class="item-name">Upload Error</span><span class="status error">✗ ${escapeHtml(xhr.responseText || error)}</span></li>`);
+                    console.log('Upload error:', xhr, status, error);
+                    $list.append(`<li><span class="item-name">${escapeHtml('Upload Error')}</span><span class="status error">✗ ${escapeHtml(xhr.responseText || error)}</span></li>`);
                     installationComplete();
                 }
             });
@@ -172,12 +182,12 @@ jQuery(document).ready(function($) {
                     install_type: type
                 },
                 success: function(response) {
-                    console.log('Item response:', response); // 调试输出
+                    console.log('Item response:', response);
                     handleResponse(response, item, index);
                     processNextItem(index + 1);
                 },
                 error: function(xhr, status, error) {
-                    console.log('Item error:', xhr, status, error); // 调试输出
+                    console.log('Item error:', xhr, status, error);
                     handleError(xhr, status, error, item, index);
                     processNextItem(index + 1);
                 }
@@ -197,20 +207,20 @@ jQuery(document).ready(function($) {
                 } else {
                     statusHtml = '✗ ' + escapeHtml(result.message);
                     if (result.retry) {
-                        statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>';
+                        statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">' + bpiAjax.i18n.retry + '</button>';
                     }
                 }
                 $item.find('.status').html(statusHtml);
             } else {
                 $item.addClass('error')
                     .find('.status')
-                    .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>');
+                    .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">' + bpiAjax.i18n.retry + '</button>');
             }
 
             completed++;
             const percentage = Math.round((completed / items.length) * 100);
             const remaining = items.length - completed;
-            $progress.text(`${completed}/${items.length} completed (${percentage}% done, ${remaining} remaining)`);
+            $progress.text(`${completed}/${items.length} ${bpiAjax.i18n.completed} (${percentage}% done, ${remaining} ${bpiAjax.i18n.remaining})`);
         }
 
         function handleError(xhr, status, error, item, index) {
@@ -218,17 +228,17 @@ jQuery(document).ready(function($) {
             $item.find('.spinner').removeClass('is-active')
                 .addClass('error')
                 .find('.status')
-                .html(`✗ ${escapeHtml(xhr.responseText || 'Installation failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">Retry</button>`);
+                .html(`✗ ${escapeHtml(xhr.responseText || 'Installation failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">${bpiAjax.i18n.retry}</button>`);
             completed++;
             const percentage = Math.round((completed / items.length) * 100);
             const remaining = items.length - completed;
-            $progress.text(`${completed}/${items.length} completed (${percentage}% done, ${remaining} remaining)`);
+            $progress.text(`${completed}/${items.length} ${bpiAjax.i18n.completed} (${percentage}% done, ${remaining} ${bpiAjax.i18n.remaining})`);
         }
 
         function installationComplete() {
             $submitButton.prop('disabled', false).text(`Install ${action === 'bpi_install_plugins' ? 'Plugins' : 'Themes'}`);
             const $notice = $results.find('.notice').removeClass('notice-info').addClass('notice-success');
-            $notice.find('p').html('Installation completed! Check the results below. Failed items can be retried using the "Retry" buttons if applicable.');
+            $notice.find('p').html(bpiAjax.i18n.installation_complete);
         }
     });
 
@@ -251,7 +261,7 @@ jQuery(document).ready(function($) {
                 install_type: type
             },
             success: function(response) {
-                console.log('Retry response:', response); // 调试输出
+                console.log('Retry response:', response);
                 $li.find('.spinner').removeClass('is-active');
                 if (response.success && response.data[item]) {
                     const result = response.data[item];
@@ -262,22 +272,22 @@ jQuery(document).ready(function($) {
                     } else {
                         statusHtml = '✗ ' + escapeHtml(result.message);
                         if (result.retry) {
-                            statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>';
+                            statusHtml += ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">' + bpiAjax.i18n.retry + '</button>';
                         }
                     }
                     $li.find('.status').html(statusHtml);
                 } else {
                     $li.addClass('error')
                         .find('.status')
-                        .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">Retry</button>');
+                        .html('✗ ' + escapeHtml(response.data || 'Unknown error') + ' <button class="retry-btn" data-item="' + escapeHtml(item) + '" data-type="' + type + '">' + bpiAjax.i18n.retry + '</button>');
                 }
             },
             error: function(xhr, status, error) {
-                console.log('Retry error:', xhr, status, error); // 调试输出
+                console.log('Retry error:', xhr, status, error);
                 $li.find('.spinner').removeClass('is-active')
                     .addClass('error')
                     .find('.status')
-                    .html(`✗ ${escapeHtml(xhr.responseText || 'Retry failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">Retry</button>`);
+                    .html(`✗ ${escapeHtml(xhr.responseText || 'Retry failed: ' + error)} <button class="retry-btn" data-item="${escapeHtml(item)}" data-type="${type}">${bpiAjax.i18n.retry}</button>`);
             }
         });
     });

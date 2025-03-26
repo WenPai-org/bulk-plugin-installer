@@ -3,7 +3,7 @@
  * Plugin Name: Bulk Plugin Installer
  * Plugin URI: https://wpmultisite.com/plugins/bulk-plugin-installer/
  * Description: Bulk install WordPress plugins and themes from repository, URL, or ZIP uploads.
- * Version: 1.1.7
+ * Version: 1.1.8
  * Author: WPMultisite.com
  * Author URI: https://wpmultisite.com
  * Network: true
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('BPI_VERSION', '1.1.7');
+define('BPI_VERSION', '1.1.8');
 define('BPI_PATH', plugin_dir_path(__FILE__));
 define('BPI_URL', plugin_dir_url(__FILE__));
 
@@ -67,16 +67,14 @@ function bpi_add_network_submenu_page() {
 define('BPI_ALLOWED_ROLES', ['administrator', 'super_admin']);
 define('BPI_TRUSTED_DOMAINS', [
     'wordpress.org',
-    'downloads.wordpress.org',
-    'github.com',
-    'raw.githubusercontent.com',
     'wenpai.cn',
     'wenpai.net',
     'wenpai.org',
-    'downloads.wenpai.net',
     'weixiaoduo.com',
     'feibisi.com',
-    'feicode.com'
+    'feicode.com',
+    'github.com',
+    'raw.githubusercontent.com'
 ]);
 
 function bpi_register_settings() {
@@ -358,3 +356,37 @@ function bpi_activate() {
         ]);
     }
 }
+
+// Add "Upload from URL" button to plugin install page
+function bpi_add_plugin_url_upload_button() {
+    if (bpi_user_can_install()) {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // 在插件上传按钮后添加URL上传按钮
+                $('.wp-header-end').before(
+                    '<a href="<?php echo admin_url("plugins.php?page=bulk-plugin-installer&tab=plugins&install_type=url"); ?>" class="page-title-action"><?php _e("Upload from URL", "bulk-plugin-installer"); ?></a>'
+                );
+            });
+        </script>
+        <?php
+    }
+}
+add_action('admin_footer-plugin-install.php', 'bpi_add_plugin_url_upload_button');
+
+// Add "Upload from URL" button to theme install page
+function bpi_add_theme_url_upload_button() {
+    if (bpi_user_can_install()) {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // 在主题上传按钮后添加URL上传按钮
+                $('.wp-header-end').before(
+                    '<a href="<?php echo admin_url("plugins.php?page=bulk-plugin-installer&tab=themes&install_type=url"); ?>" class="page-title-action"><?php _e("Upload from URL", "bulk-plugin-installer"); ?></a>'
+                );
+            });
+        </script>
+        <?php
+    }
+}
+add_action('admin_footer-theme-install.php', 'bpi_add_theme_url_upload_button');

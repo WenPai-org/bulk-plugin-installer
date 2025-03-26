@@ -208,3 +208,8 @@
 .retry-btn:hover {
     background: #005a87;
 }
+
+.upload.button {
+    margin-left: 10px;
+    vertical-align: top;
+}
