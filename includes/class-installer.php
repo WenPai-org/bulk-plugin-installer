@@ -1,8 +1,25 @@
 <?php
+/**
+ * Installer class for handling plugin and theme installations
+ */
 class BPI_Installer {
+    /**
+     * WordPress filesystem object
+     *
+     * @var WP_Filesystem_Base
+     */
     private $wp_filesystem;
-    private $error_messages = []; // Initialize as empty array
 
+    /**
+     * Error messages with translation
+     *
+     * @var array
+     */
+    private $error_messages = [];
+
+    /**
+     * Constructor
+     */
     public function __construct() {
         global $wp_filesystem;
         if (empty($wp_filesystem)) {
@@ -32,12 +49,28 @@ class BPI_Installer {
         ];
     }
 
-
+    /**
+     * Get error message by code
+     *
+     * @param int $code Error code
+     * @param string $default_message Default message if code not found
+     * @return string Error message
+     */
     public function get_error_message($code, $default_message) {
-        return __($this->error_messages[$code] ?? $default_message, 'bulk-plugin-installer');
+        return isset($this->error_messages[$code]) ? $this->error_messages[$code] : $default_message;
     }
 
+    /**
+     * Check if a ZIP file is a plugin
+     *
+     * @param string $zip_path Path to ZIP file
+     * @return bool True if it's a plugin, false otherwise
+     */
     private function is_plugin_zip($zip_path) {
+        if (!extension_loaded('zip')) {
+            return false;
+        }
+
         $zip = new ZipArchive();
         if ($zip->open($zip_path) === true) {
             for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -55,7 +88,17 @@ class BPI_Installer {
         return false;
     }
 
+    /**
+     * Check if a ZIP file is a theme
+     *
+     * @param string $zip_path Path to ZIP file
+     * @return bool True if it's a theme, false otherwise
+     */
     private function is_theme_zip($zip_path) {
+        if (!extension_loaded('zip')) {
+            return false;
+        }
+
         $zip = new ZipArchive();
         if ($zip->open($zip_path) === true) {
             for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -69,6 +112,13 @@ class BPI_Installer {
         return false;
     }
 
+    /**
+     * Install plugins
+     *
+     * @param array $items Items to install
+     * @param string $type Installation type
+     * @return array Installation results
+     */
     public function bpi_install_plugins($items, $type) {
         $valid_types = ['repository', 'wenpai', 'url', 'upload'];
         if (!in_array($type, $valid_types)) {
@@ -82,6 +132,13 @@ class BPI_Installer {
         require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        // Get installation options
+        $install_options = get_option('bpi_install_options', [
+            'duplicate_handling' => 'skip',
+            'auto_activate' => false,
+            'keep_backups' => false,
+        ]);
 
         $results = [];
         $upgrader = new Plugin_Upgrader(new WP_Ajax_Upgrader_Skin());
@@ -105,12 +162,74 @@ class BPI_Installer {
                 }
 
                 if ($plugin_key && array_key_exists($plugin_key, $installed_plugins)) {
-                    $results[$item] = [
-                        'success' => true,
-                        'message' => __('Plugin already installed, skipped', 'bulk-plugin-installer'),
-                        'skipped' => true
-                    ];
-                    continue;
+                    switch ($install_options['duplicate_handling']) {
+                        case 'skip':
+                            $results[$item] = [
+                                'success' => true,
+                                'message' => __('Plugin already installed, skipped', 'bulk-plugin-installer'),
+                                'skipped' => true
+                            ];
+                            bpi_add_log_entry(
+                                $item,
+                                'plugin',
+                                'install',
+                                $type,
+                                'skipped',
+                                __('Plugin already installed, skipped', 'bulk-plugin-installer')
+                            );
+                            continue 2; // Skip to the next item in the foreach loop
+
+                        case 'reinstall':
+                            // Continue with reinstall (don't add any special code here, just don't skip)
+                            if ($install_options['keep_backups']) {
+                                // Backup the existing plugin
+                                $backup_dir = WP_CONTENT_DIR . '/bpi-backups/plugins/';
+                                if (!file_exists($backup_dir)) {
+                                    wp_mkdir_p($backup_dir);
+                                }
+
+                                $plugin_dir = WP_PLUGIN_DIR . '/' . dirname($plugin_key);
+                                $backup_path = $backup_dir . basename($plugin_dir) . '-' . date('Y-m-d-H-i-s') . '.zip';
+
+                                // Create backup
+                                if (class_exists('ZipArchive')) {
+                                    $zip = new ZipArchive();
+                                    if ($zip->open($backup_path, ZipArchive::CREATE) === TRUE) {
+                                        $files = new RecursiveIteratorIterator(
+                                            new RecursiveDirectoryIterator($plugin_dir),
+                                            RecursiveIteratorIterator::LEAVES_ONLY
+                                        );
+
+                                        foreach ($files as $file) {
+                                            if (!$file->isDir()) {
+                                                $filePath = $file->getRealPath();
+                                                $relativePath = substr($filePath, strlen($plugin_dir) + 1);
+                                                $zip->addFile($filePath, $relativePath);
+                                            }
+                                        }
+
+                                        $zip->close();
+                                    }
+                                }
+                            }
+                            break;
+
+                        case 'error':
+                            $results[$item] = [
+                                'success' => false,
+                                'message' => __('Plugin already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer'),
+                                'error_code' => 1013
+                            ];
+                            bpi_add_log_entry(
+                                $item,
+                                'plugin',
+                                'install',
+                                $type,
+                                'error',
+                                __('Plugin already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer')
+                            );
+                            continue 2; // Skip to the next item in the foreach loop
+                    }
                 }
 
                 $download_link = '';
@@ -225,9 +344,47 @@ class BPI_Installer {
                     );
                 }
 
+                $success_message = __('Successfully installed', 'bulk-plugin-installer');
+
+                // Add auto-activation logic
+                if ($install_options['auto_activate'] && $result === true) {
+                    $plugin_file = false;
+
+                    // Find the installed plugin file
+                    $plugin_folders = glob(WP_PLUGIN_DIR . '/*', GLOB_ONLYDIR);
+                    foreach ($plugin_folders as $plugin_folder) {
+                        $potential_main_file = basename($plugin_folder) . '.php';
+                        if (file_exists($plugin_folder . '/' . $potential_main_file)) {
+                            $plugin_file = basename($plugin_folder) . '/' . $potential_main_file;
+                            break;
+                        }
+                    }
+
+                    if ($plugin_file) {
+                        if (is_multisite() && is_network_admin()) {
+                            $activate = activate_plugin($plugin_file, '', true);
+                        } else {
+                            $activate = activate_plugin($plugin_file);
+                        }
+
+                        if (!is_wp_error($activate)) {
+                            $success_message .= ' ' . __('and activated', 'bulk-plugin-installer');
+                        }
+                    }
+                }
+
+                bpi_add_log_entry(
+                    $item,
+                    'plugin',
+                    'install',
+                    $type,
+                    'success',
+                    $success_message
+                );
+
                 $results[$item] = [
                     'success' => true,
-                    'message' => __('Successfully installed', 'bulk-plugin-installer')
+                    'message' => $success_message
                 ];
             } catch (Exception $e) {
                 $no_retry_codes = [1001, 1004, 1005, 1007, 1009, 1010];
@@ -237,12 +394,28 @@ class BPI_Installer {
                     'error_code' => $e->getCode(),
                     'retry' => !in_array($e->getCode(), $no_retry_codes)
                 ];
+
+                bpi_add_log_entry(
+                    $item,
+                    'plugin',
+                    'install',
+                    $type,
+                    'error',
+                    $this->get_error_message($e->getCode(), $e->getMessage())
+                );
             }
         }
 
         return $results;
     }
 
+    /**
+     * Install themes
+     *
+     * @param array $items Items to install
+     * @param string $type Installation type
+     * @return array Installation results
+     */
     public function bpi_install_themes($items, $type) {
         $valid_types = ['repository', 'wenpai', 'url', 'upload'];
         if (!in_array($type, $valid_types)) {
@@ -255,6 +428,12 @@ class BPI_Installer {
 
         require_once ABSPATH . 'wp-admin/includes/theme-install.php';
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+
+        $install_options = get_option('bpi_install_options', [
+            'duplicate_handling' => 'skip',
+            'auto_activate' => false,
+            'keep_backups' => false,
+        ]);
 
         $results = [];
         $upgrader = new Theme_Upgrader(new WP_Ajax_Upgrader_Skin());
@@ -299,6 +478,21 @@ class BPI_Installer {
                         );
                     }
 
+                    if (!$this->is_theme_zip($dest_path)) {
+                        if ($this->is_plugin_zip($dest_path)) {
+                            unlink($dest_path);
+                            throw new Exception(
+                                $this->get_error_message(2005, 'Plugin ZIP detected'),
+                                2005
+                            );
+                        }
+                        unlink($dest_path);
+                        throw new Exception(
+                            $this->get_error_message(2006, 'Invalid theme ZIP'),
+                            2006
+                        );
+                    }
+
                     $zip = new ZipArchive();
                     if ($zip->open($dest_path) === true) {
                         $theme_key = null;
@@ -316,30 +510,80 @@ class BPI_Installer {
                     }
 
                     if ($theme_key && array_key_exists($theme_key, $installed_themes)) {
-                        if (file_exists($dest_path)) {
-                            unlink($dest_path);
-                        }
-                        $results[$file_name] = [
-                            'success' => true,
-                            'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
-                            'skipped' => true
-                        ];
-                        continue;
-                    }
+                        switch ($install_options['duplicate_handling']) {
+                            case 'skip':
+                                if (file_exists($dest_path)) {
+                                    unlink($dest_path);
+                                }
+                                $results[$file_name] = [
+                                    'success' => true,
+                                    'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
+                                    'skipped' => true
+                                ];
+                                bpi_add_log_entry(
+                                    $file_name,
+                                    'theme',
+                                    'install',
+                                    $type,
+                                    'skipped',
+                                    __('Theme already installed, skipped', 'bulk-plugin-installer')
+                                );
+                                continue 2; // Skip to the next item in the foreach loop
 
-                    if (!$this->is_theme_zip($dest_path)) {
-                        if ($this->is_plugin_zip($dest_path)) {
-                            unlink($dest_path);
-                            throw new Exception(
-                                $this->get_error_message(2005, 'Plugin ZIP detected'),
-                                2005
-                            );
+                            case 'reinstall':
+                                // Continue with reinstall
+                                if ($install_options['keep_backups']) {
+                                    // Backup code for themes
+                                    $backup_dir = WP_CONTENT_DIR . '/bpi-backups/themes/';
+                                    if (!file_exists($backup_dir)) {
+                                        wp_mkdir_p($backup_dir);
+                                    }
+
+                                    $theme_dir = get_theme_root() . '/' . $theme_key;
+                                    $backup_path = $backup_dir . $theme_key . '-' . date('Y-m-d-H-i-s') . '.zip';
+
+                                    // Create backup
+                                    if (class_exists('ZipArchive') && file_exists($theme_dir)) {
+                                        $zip = new ZipArchive();
+                                        if ($zip->open($backup_path, ZipArchive::CREATE) === TRUE) {
+                                            $files = new RecursiveIteratorIterator(
+                                                new RecursiveDirectoryIterator($theme_dir),
+                                                RecursiveIteratorIterator::LEAVES_ONLY
+                                            );
+
+                                            foreach ($files as $file) {
+                                                if (!$file->isDir()) {
+                                                    $filePath = $file->getRealPath();
+                                                    $relativePath = substr($filePath, strlen($theme_dir) + 1);
+                                                    $zip->addFile($filePath, $relativePath);
+                                                }
+                                            }
+
+                                            $zip->close();
+                                        }
+                                    }
+                                }
+                                break;
+
+                            case 'error':
+                                if (file_exists($dest_path)) {
+                                    unlink($dest_path);
+                                }
+                                $results[$file_name] = [
+                                    'success' => false,
+                                    'message' => __('Theme already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer'),
+                                    'error_code' => 2013
+                                ];
+                                bpi_add_log_entry(
+                                    $file_name,
+                                    'theme',
+                                    'install',
+                                    $type,
+                                    'error',
+                                    __('Theme already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer')
+                                );
+                                continue 2; // Skip to the next item in the foreach loop
                         }
-                        unlink($dest_path);
-                        throw new Exception(
-                            $this->get_error_message(2006, 'Invalid theme ZIP'),
-                            2006
-                        );
                     }
 
                     $download_link = $dest_path;
@@ -347,12 +591,74 @@ class BPI_Installer {
                 } else {
                     $theme_key = $item;
                     if ($theme_key && array_key_exists($theme_key, $installed_themes)) {
-                        $results[$item] = [
-                            'success' => true,
-                            'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
-                            'skipped' => true
-                        ];
-                        continue;
+                        switch ($install_options['duplicate_handling']) {
+                            case 'skip':
+                                $results[$item] = [
+                                    'success' => true,
+                                    'message' => __('Theme already installed, skipped', 'bulk-plugin-installer'),
+                                    'skipped' => true
+                                ];
+                                bpi_add_log_entry(
+                                    $item,
+                                    'theme',
+                                    'install',
+                                    $type,
+                                    'skipped',
+                                    __('Theme already installed, skipped', 'bulk-plugin-installer')
+                                );
+                                continue 2; // Skip to the next item in the foreach loop
+
+                            case 'reinstall':
+                                // Continue with reinstall
+                                if ($install_options['keep_backups']) {
+                                    // Backup code for themes
+                                    $backup_dir = WP_CONTENT_DIR . '/bpi-backups/themes/';
+                                    if (!file_exists($backup_dir)) {
+                                        wp_mkdir_p($backup_dir);
+                                    }
+
+                                    $theme_dir = get_theme_root() . '/' . $theme_key;
+                                    $backup_path = $backup_dir . $theme_key . '-' . date('Y-m-d-H-i-s') . '.zip';
+
+                                    // Create backup
+                                    if (class_exists('ZipArchive') && file_exists($theme_dir)) {
+                                        $zip = new ZipArchive();
+                                        if ($zip->open($backup_path, ZipArchive::CREATE) === TRUE) {
+                                            $files = new RecursiveIteratorIterator(
+                                                new RecursiveDirectoryIterator($theme_dir),
+                                                RecursiveIteratorIterator::LEAVES_ONLY
+                                            );
+
+                                            foreach ($files as $file) {
+                                                if (!$file->isDir()) {
+                                                    $filePath = $file->getRealPath();
+                                                    $relativePath = substr($filePath, strlen($theme_dir) + 1);
+                                                    $zip->addFile($filePath, $relativePath);
+                                                }
+                                            }
+
+                                            $zip->close();
+                                        }
+                                    }
+                                }
+                                break;
+
+                            case 'error':
+                                $results[$item] = [
+                                    'success' => false,
+                                    'message' => __('Theme already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer'),
+                                    'error_code' => 2013
+                                ];
+                                bpi_add_log_entry(
+                                    $item,
+                                    'theme',
+                                    'install',
+                                    $type,
+                                    'error',
+                                    __('Theme already installed. Set "Skip duplicates" in settings to ignore this error.', 'bulk-plugin-installer')
+                                );
+                                continue 2; // Skip to the next item in the foreach loop
+                        }
                     }
                 }
 
@@ -426,6 +732,15 @@ class BPI_Installer {
                     );
                 }
 
+                bpi_add_log_entry(
+                    $item,
+                    'theme',
+                    'install',
+                    $type,
+                    'success',
+                    __('Successfully installed', 'bulk-plugin-installer')
+                );
+
                 $results[$item] = [
                     'success' => true,
                     'message' => __('Successfully installed', 'bulk-plugin-installer')
@@ -438,6 +753,15 @@ class BPI_Installer {
                     'error_code' => $e->getCode(),
                     'retry' => !in_array($e->getCode(), $no_retry_codes)
                 ];
+
+                bpi_add_log_entry(
+                    $item,
+                    'theme',
+                    'install',
+                    $type,
+                    'error',
+                    $this->get_error_message($e->getCode(), $e->getMessage())
+                );
             }
         }
 

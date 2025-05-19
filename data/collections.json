@@ -1,0 +1,44 @@
+{
+    "version": "1.0",
+    "last_updated": "2025-05-17",
+    "collections": {
+        "business": {
+            "name": "Business Website",
+            "slug": "business",
+            "description": "Essential plugins for a professional business website.",
+            "icon": "dashicons-building",
+            "category": "business",
+            "level": "beginner",
+            "plugins": {
+                "repository": [
+                    {
+                        "slug": "wordpress-seo",
+                        "name": "Yoast SEO",
+                        "description": "The leading SEO plugin for WordPress",
+                        "required": true
+                    },
+                    {
+                        "slug": "contact-form-7",
+                        "name": "Contact Form 7",
+                        "description": "Simple but flexible contact form plugin",
+                        "required": true
+                    }
+                ],
+                "wenpai": [],
+                "url": []
+            },
+            "themes": {
+                "repository": [
+                    {
+                        "slug": "astra",
+                        "name": "Astra",
+                        "description": "Fast, lightweight theme for business websites",
+                        "required": false
+                    }
+                ],
+                "wenpai": [],
+                "url": []
+            }
+        }
+    }
+}
